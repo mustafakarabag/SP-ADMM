@@ -1,4 +1,5 @@
-#Saddle-Point ADMM (SP-ADMM)
+# Saddle-Point ADMM (SP-ADMM)
+
 Saddle-point alternating direction method of multipliers (SP-ADMM) is an algorithm to solve decomposable saddle point problems.
 The decomposable saddle-point problem has the following form:
 $$
