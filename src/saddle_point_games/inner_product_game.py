@@ -1,6 +1,6 @@
 import numpy as np
-from src.projections import Projections
-from src.saddle_point_admm import SaddlePointADMM
+from ..optim.projections import Projections
+from ..optim.saddle_point_admm import SaddlePointADMM
 
 
 class InnerProductGame(SaddlePointADMM):

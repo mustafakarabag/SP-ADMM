@@ -1,5 +1,6 @@
 import numpy as np
-from saddle_point_games.power_allocation_game import PowerAllocationGame
+
+from ..saddle_point_games.power_allocation_game import PowerAllocationGame
 
 np.random.seed(0)
 

@@ -1,5 +1,5 @@
 import numpy as np
-from saddle_point_games.inner_product_game import InnerProductGameSimplex
+from ..saddle_point_games.inner_product_game import InnerProductGameBall
 
 np.random.seed(0)
 
@@ -8,10 +8,10 @@ rho_a = 1e-2
 rho_b = 1e-2
 num_of_itr = 50
 game_constants = 1*np.random.randn(N)
-box_a = [[1e-3, 1]] * N
-box_b = [[1e-3, 1]] * N
+box_a = [[1e-2, 1]] * N
+box_b = [[1e-2, 1]] * N
 
-my_game = InnerProductGameSimplex(game_constants, box_a, box_b)
+my_game = InnerProductGameBall(game_constants, box_a, box_b)
 
 my_game.solve_saddle_point_admm(rho_a, rho_b, num_of_itr)
 
