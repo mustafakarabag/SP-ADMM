@@ -87,7 +87,7 @@ An example of this class is implemented in src>examples>inner_product_game_simpl
 
 $$
 \begin{matrix}
-\underset{x_{a}}{\min} \ \underset{x_{b}}{\max} &  \sum_{1 \leq i \leq N} c_{i} \log\left(1 + \frac{\beta x_{b,i}}{\sigma_{i} + x_{a,i}} \right)& \\ 
+\underset{x_{a}}{\min} \ \underset{x_{b}}{\max} &  \sum_{1 \leq i \leq N} \log\left(1 + \frac{\beta x_{b,i}}{\sigma_{i} + x_{a,i}} \right)& \\ 
 \text{subject to} & x_{a, i} \in [l_{a,i}, u_{a,i}] & \text{for all } i \\ 
  & x_{b, i} \in [l_{b,i}, u_{b,i}] & \text{for all } i  \\
  & x_{a}/A \in \Delta_{N} &  & \\
@@ -110,12 +110,12 @@ An example of this class is implemented in src>examples>power_allocation_example
 
 $$
 \begin{matrix}
-\underset{x_{a}}{\min} \ \underset{x_{b}}{\max} &  \sum_{1 \leq i \leq N} c_{i} x_{a,i}(x_{a,i} + x_{b,i})& \\ 
+\underset{x_{a}}{\min} \ \underset{x_{b}}{\max} &  \sum_{1 \leq i \leq N}  x_{a,i}(x_{a,i} + x_{b,i})& \\ 
 \text{subject to} & x_{a, i} \in [0,1] & \text{for all } i \\ 
  & x_{b, i} \in [0,1] & \text{for all } i  \\
- & \sum_{i \in E} x_{a, i} \geq 0.1 
- & x_{a}/A \in MDP_{X} &  & \\
- & x_{b}/B \in MDP_{X} &   & 
+ & \sum_{i \in E} x_{a, i} \geq 0.1 &  &\\
+ & x_{a} \in MDP_{X} &  & \\
+ & x_{b} \in MDP_{X} &   & 
 \end{matrix}
 $$
 
