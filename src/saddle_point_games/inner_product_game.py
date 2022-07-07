@@ -18,7 +18,7 @@ class InnerProductGame(SaddlePointADMM):
         self.box_b = box_b
         super().__init__()
 
-    def initialize_vars(self):
+    def initialize_vars_spadmm(self):
         """
         Initializes the varibales of the saddle point ADMM game.
 
@@ -40,12 +40,12 @@ class InnerProductGame(SaddlePointADMM):
         x_a = np.random.randn(self.N) / self.N
         x_b = np.random.randn(self.N) / self.N
 
-        z_a = self.project_z_a(x_a)
-        z_b = self.project_z_b(x_b)
+        z_a = self.project_z_a_spadmm(x_a)
+        z_b = self.project_z_b_spadmm(x_b)
 
         return x_a, x_b, z_a, z_b, lmd_a, lmd_b
 
-    def solve_augmented_saddle_game(self, z_a, z_b, lmd_a, lmd_b):
+    def solve_augmented_saddle_game_spadmm(self, z_a, z_b, lmd_a, lmd_b):
         """
         Solves the quadratic, bilinear saddle point game by decomposition.
         :param z_a: Auxilary primal variable for the minimizer from the previous iteration.
@@ -69,34 +69,96 @@ class InnerProductGame(SaddlePointADMM):
         Analytically solves the individual augmented saddle point games. The game is
         min_(x_a_i) max_(x_b_i) c_i*x_a_i*x_b_i
                                 + lmd_a_i*(x_a_i - z_a_i) + rho_a/2*(x_a_i - z_a_i)^2
-                                - lmd_b_i*(x_b_i - z_b_i) + rho_b/2*(x_b_i - z_b_i)^2
+                                - lmd_b_i*(x_b_i - z_b_i) - rho_b/2*(x_b_i - z_b_i)^2
         subject to              box_a_i <= x_a[i] 
                                 box_b_i <= x_b[i] 
         :return: A saddle point x_a_i and x_b_i
         """
-        # TODO: Extend the solver to support the upper bounds of the box constraints.
 
         # Solution points from the first order optimality conditions
+
+        #Optimal responses based on first order conditions
+        find_opt_x_b = lambda x_a, x_b :(c_i * x_a + z_b_i * rho_b - lmd_b_i) / rho_b
+        find_opt_x_a = lambda x_a, x_b :(-c_i * x_b + z_a_i * rho_a - lmd_a_i) / rho_a
+
+        #Case 1 x_a plays normal, x_b_plays normal
         x_a_i = (-c_i * rho_b * z_b_i + c_i * lmd_b_i + rho_a * rho_b * z_a_i - lmd_a_i * rho_b) / (
                 c_i ** 2 + rho_a * rho_b)
         x_b_i = (c_i * rho_a * z_a_i - c_i * lmd_a_i + rho_a * rho_b * z_b_i - lmd_b_i * rho_a) / (
                 c_i ** 2 + rho_a * rho_b)
 
-        # Set the solution to 0 if it is out of bounds
-        if x_a_i >= box_a_i[0]:
-            if x_b_i < box_b_i[0]:
-                x_b_i = box_b_i[0]
-                x_a_i = (-c_i * x_b_i + z_a_i * rho_a - lmd_a_i) / rho_a
-                if x_a_i < box_a_i[0]:
-                    x_a_i = box_a_i[0]
-        else:
-            x_a_i = box_a_i[0]
-            x_b_i = (c_i * x_a_i + z_b_i * rho_b - lmd_b_i) / rho_b
-            if x_b_i < box_b_i[0]:
-                x_b_i = box_b_i[0]
+        if (x_a_i >= box_a_i[0]) and (x_a_i <= box_a_i[1]) and (x_b_i >= box_b_i[0]) and (x_b_i <= box_b_i[1]):
+            return x_a_i, x_b_i
+
+        #Case 2 x_a plays box_a_i[0], x_b plays normal
+        x_a_i = box_a_i[0]
+        x_b_i = find_opt_x_b(x_a_i, x_b_i)
+        opt_x_a_i = find_opt_x_a(x_a_i, x_b_i)
+        opt_x_b_i = find_opt_x_b(x_a_i, x_b_i)
+        if (x_b_i >= box_b_i[0]) and (x_b_i <= box_b_i[1]) and (opt_x_a_i <= box_a_i[0]):
+            return x_a_i, x_b_i
+
+        #Case 3 x_a plays box_a_i[1], x_b plays normal
+        x_a_i = box_a_i[1]
+        x_b_i = find_opt_x_b(x_a_i, x_b_i)
+        opt_x_b_i = find_opt_x_b(x_a_i, x_b_i)
+        opt_x_a_i = find_opt_x_a(x_a_i, x_b_i)
+        if (x_b_i >= box_b_i[0]) and (x_b_i <= box_b_i[1]) and (opt_x_a_i >= box_a_i[1]):
+            return x_a_i, x_b_i
+
+        #Case 4 x_a plays normal, x_b plays box_b_i[0]
+        x_b_i = box_b_i[0]
+        x_a_i = find_opt_x_a(x_a_i, x_b_i)
+        opt_x_a_i = find_opt_x_a(x_a_i, x_b_i)
+        opt_x_b_i = find_opt_x_b(x_a_i, x_b_i)
+        if (x_a_i >= box_a_i[0]) and (x_a_i <= box_a_i[1]) and (opt_x_b_i <= box_b_i[0]):
+            return x_a_i, x_b_i
+
+
+        #Case 5 x_a plays box_a_i[0], x_b plays box_b_i[0]
+        x_a_i = box_a_i[0]
+        x_b_i = box_b_i[0]
+        opt_x_a_i = find_opt_x_a(x_a_i, x_b_i)
+        opt_x_b_i = find_opt_x_b(x_a_i, x_b_i)
+        if (opt_x_b_i <= box_b_i[0]) and (opt_x_a_i <= box_a_i[0]):
+            return x_a_i, x_b_i
+
+        #Case 6 x_a plays box_a_i[1], x_b plays box_b_i[0]
+        x_a_i = box_a_i[1]
+        x_b_i = box_b_i[0]
+        opt_x_a_i = find_opt_x_a(x_a_i, x_b_i)
+        opt_x_b_i = find_opt_x_b(x_a_i, x_b_i)
+        if (opt_x_b_i <= box_b_i[0]) and (opt_x_a_i >= box_a_i[1]):
+            return x_a_i, x_b_i
+
+        #Case 7 x_a plays normal, x_b plays box_b_i[1]
+        x_b_i = box_b_i[1]
+        x_a_i = find_opt_x_a(x_a_i, x_b_i)
+        opt_x_a_i = find_opt_x_a(x_a_i, x_b_i)
+        opt_x_b_i = find_opt_x_b(x_a_i, x_b_i)
+        if (x_a_i >= box_a_i[0]) and (x_a_i <= box_a_i[1]) and (opt_x_b_i >= box_b_i[1]):
+            return x_a_i, x_b_i
+
+        #Case 8 x_a plays box_a_i[0], x_b plays box_b_i[1]
+        x_a_i = box_a_i[0]
+        x_b_i = box_b_i[1]
+        opt_x_a_i = find_opt_x_a(x_a_i, x_b_i)
+        opt_x_b_i = find_opt_x_b(x_a_i, x_b_i)
+        if (opt_x_b_i >= box_b_i[1]) and (opt_x_a_i <= box_a_i[0]):
+            return x_a_i, x_b_i
+
+        #Case 9 x_a plays box_a_i[1], x_b plays box_b_i[1]
+        x_a_i = box_a_i[1]
+        x_b_i = box_b_i[1]
+        opt_x_a_i = find_opt_x_a(x_a_i, x_b_i)
+        opt_x_b_i = find_opt_x_b(x_a_i, x_b_i)
+        if (opt_x_b_i >= box_b_i[1]) and (opt_x_a_i >= box_a_i[1]):
+            return x_a_i, x_b_i
 
         return x_a_i, x_b_i
 
+
+    #Game value computation methods
     def compute_game_val_itr(self, x_a, x_b):
         """
         Computes the game value for the inner product game
@@ -108,7 +170,7 @@ class InnerProductGame(SaddlePointADMM):
 
     def compute_game_vals(self):
         """
-        Computes the game values for a given list of points
+        Computes the game values for the primal x variables
         """
         self.game_val_list = []
         for (x_a, x_b) in zip(self.x_a_list, self.x_b_list):
@@ -116,7 +178,7 @@ class InnerProductGame(SaddlePointADMM):
 
     def compute_game_vals_aux(self):
         """
-        Computes the game values for a given list of points
+        Computes the game values for the auxiliary primal z variables
         """
         self.game_val_list_aux = []
         for (z_a, z_b) in zip(self.z_a_list, self.z_b_list):
@@ -132,10 +194,10 @@ class InnerProductGameBall(InnerProductGame):
     def __init__(self, game_constants, box_a, box_b):
         super().__init__(game_constants, box_a, box_b)
 
-    def project_z_a(self, vec):
+    def project_z_a_spadmm(self, vec):
         return Projections.project_onto_ball(vec)
 
-    def project_z_b(self, vec):
+    def project_z_b_spadmm(self, vec):
         return Projections.project_onto_ball(vec)
 
 
@@ -146,8 +208,8 @@ class InnerProductGameSimplex(InnerProductGame):
     def __init__(self, game_constants, box_a, box_b):
         super().__init__(game_constants, box_a, box_b)
 
-    def project_z_a(self, vec):
+    def project_z_a_spadmm(self, vec):
         return Projections.project_onto_simplex(vec)
 
-    def project_z_b(self, vec):
+    def project_z_b_spadmm(self, vec):
         return Projections.project_onto_simplex(vec)

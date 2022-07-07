@@ -1,6 +1,12 @@
+import numpy as np
+
 if __name__ == '__main__':
-    print('__file__={0:<35} | __name__={1:<20} | __package__={2:<20}'.format(__file__, __name__, str(__package__)))
-    import src.examples.power_allocation_example
+    """
+    To run an example, import it from the examples module
+    """
+    #import src.examples.network_routing_game_example
+    #import src.examples.inner_product_game_simplex_example
+    import src.examples.inner_product_game_ball_example
+    #import src.examples.power_allocation_example
 
     pass
-

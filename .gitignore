@@ -1,9 +1,9 @@
 !.gitignore
 !main.py
-!src
 !README.md
 
 __pycache__/
 venv/
 idle_code/
 .idea
+logs/

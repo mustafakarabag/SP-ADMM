@@ -13,14 +13,8 @@ class PowerAllocationGame(SaddlePointADMM):
         self.box_b = box_b
         super().__init__()
 
-
-    def project_z_a(self, vec):
-        return Projections.project_onto_simplex(vec, self.power_lim_a)
-
-    def project_z_b(self, vec):
-        return Projections.project_onto_simplex(vec, self.power_lim_b)
-
-    def initialize_vars(self):
+    #SP-ADMM related methods
+    def initialize_vars_spadmm(self):
         """
         Initializes the varibales of the saddle point ADMM game.
 
@@ -35,20 +29,25 @@ class PowerAllocationGame(SaddlePointADMM):
         lmd_a = np.zeros(self.N)
         lmd_b = np.zeros(self.N)
 
-        for i in range(self.N):
-            x_a[i] = (self.box_a[i][0] + self.box_a[i][1]) / 2
-            x_b[i] = (self.box_b[i][0] + self.box_b[i][1]) / 2
+        #for i in range(self.N):
+        #    x_a[i] = (self.box_a[i][0] + self.box_a[i][1]) / 2
+        #    x_b[i] = (self.box_b[i][0] + self.box_b[i][1]) / 2
 
         #x_a = np.random.randn(self.N)/self.N
         #x_b = np.random.randn(self.N)/self.N
 
-        z_a = self.project_z_a(x_a)
-        z_b = self.project_z_b(x_b)
+        z_a = self.project_z_a_spadmm(x_a)
+        z_b = self.project_z_b_spadmm(x_b)
 
         return x_a, x_b, z_a, z_b, lmd_a, lmd_b
 
+    def project_z_a_spadmm(self, vec):
+        return Projections.project_onto_simplex(vec, self.power_lim_a)
 
-    def solve_augmented_saddle_game(self, z_a, z_b, lmd_a, lmd_b):
+    def project_z_b_spadmm(self, vec):
+        return Projections.project_onto_simplex(vec, self.power_lim_b)
+
+    def solve_augmented_saddle_game_spadmm(self, z_a, z_b, lmd_a, lmd_b):
         """
         Solves the quadratic, bilinear saddle point game by decomposition.
         :param z_a: Auxilary primal variable for the minimizer from the previous iteration.
@@ -122,6 +121,7 @@ class PowerAllocationGame(SaddlePointADMM):
         #print(itr)
         return x_adversary_i, x_player_i
 
+    #Game value computation methods
     def compute_game_val_itr(self,x_a, x_b):
         """
         Computes the game value for the power allocation game
@@ -135,7 +135,7 @@ class PowerAllocationGame(SaddlePointADMM):
 
     def compute_game_vals(self):
         """
-        Computes the game values for a given list of points
+        Computes the game values for the primal x variables
         """
         self.game_val_list = []
         for (x_a, x_b) in zip(self.x_a_list, self.x_b_list):
@@ -143,7 +143,7 @@ class PowerAllocationGame(SaddlePointADMM):
 
     def compute_game_vals_aux(self):
         """
-        Computes the game values for a given list of points
+        Computes the game values for the auxiliary primal z variables
         """
         self.game_val_list_aux = []
         for (z_a, z_b) in zip(self.z_a_list, self.z_b_list):
