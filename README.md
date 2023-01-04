@@ -1,4 +1,8 @@
 # Saddle-Point ADMM (SP-ADMM)
+Paper title: Alternating Direction Method of Multipliers for Decomposable Saddle-Point Problems
+
+Paper link: https://arxiv.org/pdf/2209.04536.pdf
+
 
 Saddle-point alternating direction method of multipliers (SP-ADMM) is an algorithm to solve decomposable saddle point problems.
 The decomposable saddle-point problem has the following form:
